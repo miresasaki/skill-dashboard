@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIイニシアティブ スキルマトリクス</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f0f1a; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+
+
+const PEER_RAW = [
+  { target: "Anara", s: [2,2,1,1,1,1,3,1,1,2,1,2,1] },
+  { target: "Anara", s: [2,2,1,1,1,1,3,1,1,2,1,2,1] },
+  { target: "Anara", s: [null,null,null,null,null,null,null,1,1,null,null,null,1] },
+  { target: "Anara", s: [3,2,2,1,1,1,2,1,1,1,2,2,1] },
+  { target: "Asako", s: [2,2,3,4,5,4,3,4,4,2,1,4,2] },
+  { target: "Asako", s: [2,2,3,3,5,4,3,3,3,2,1,3,2] },
+  { target: "Asako", s: [null,null,null,5,5,3,null,3,3,null,null,null,null] },
+  { target: "Chie", s: [5,5,5,3,4,5,5,4,5,5,5,5,5] },
+  { target: "Chie", s: [4,5,5,4,4,5,5,4,5,3,4,5,5] },
+  { target: "Chie", s: [5,5,4,4,4,5,5,4,5,4,4,4,5] },
+  { target: "Fukuda", s: [2,3,3,3,3,2,1,4,3,2,2,1,3] },
+  { target: "Fukuda", s: [2,3,3,3,3,3,1,4,4,2,1,1,1] },
+  { target: "Fukuda", s: [2,2,2,3,2,3,2,4,4,2,2,1,1] },
+  { target: "DOI", s: [3,3,2,1,1,2,3,2,2,1,1,1,1] },
+  { target: "DOI", s: [4,3,2,1,1,2,3,2,3,2,3,1,1] },
+  { target: "Muto", s: [5,4,2,2,1,4,2,4,4,4,3,1,1] },
+  { target: "Muto", s: [3,4,4,3,2,4,3,4,3,4,4,2,2] },
+  { target: "Mire", s: [3,3,3,1,1,2,3,1,2,2,2,1,1] },
+  { target: "Mire", s: [3,3,1,1,2,3,3,1,2,2,1,2,1] },
+  { target: "Mire", s: [2,3,1,1,2,3,2,1,2,2,1,2,1] },
+  { target: "Nakai", s: [2,2,2,1,2,2,2,2,2,1,1,1,1] },
+  { target: "Nakai", s: [2,2,2,1,2,3,2,2,3,1,1,1,1] },
+];
+
+const MEMBERS = [
+  { name: "Chie Kamijo", short: "Chie", role: "COO", self: [5,5,5,3,4,5,5,5,5,5,5,5,5] },
+  { name: "Asako Takashika", short: "Asako", role: "PM", self: [2,2,3,4,3,4,2,4,4,1,1,5,3] },
+  { name: "Daisuke Fukuda", short: "Fukuda", role: "PMO", self: [2,2,1,2,2,2,3,3,3,2,1,1,1] },
+  { name: "Ieri Muto", short: "Muto", role: "PMO", self: [4,3,2,2,1,3,1,2,3,3,2,1,1] },
+  { name: "Taku Nakai", short: "Nakai", role: "PMO", self: [2,2,1,1,2,3,3,2,2,1,1,1,1] },
+  { name: "DOI SATOE", short: "DOI", role: "デザイナー", self: [3,3,1,1,1,2,3,2,2,1,1,1,1] },
+  { name: "Mire Sasaki", short: "Mire", role: "インターン", self: [3,3,1,1,1,1,2,1,1,1,1,1,1] },
+  { name: "Anara", short: "Anara", role: "インターン", self: [0,0,0,0,0,0,0,0,0,0,0,0,0] },
+];
+
+const SKILLS = [
+  { id: 0, short: "AIクリエイティブ", name: "AIクリエイティブツール", cat: "AI" },
+  { id: 1, short: "AIエージェント", name: "AIエージェント設計・構築", cat: "AI" },
+  { id: 2, short: "AI実装運用", name: "AI実装・運用", cat: "AI" },
+  { id: 3, short: "コーディング", name: "コーディング/アプリ開発", cat: "Tech" },
+  { id: 4, short: "データ連携", name: "外部データ連携設計", cat: "Tech" },
+  { id: 5, short: "ワークフロー", name: "業務ワークフロー設計", cat: "Tech" },
+  { id: 6, short: "研修ガイド", name: "研修・ガイド資料作成", cat: "Biz" },
+  { id: 7, short: "PM", name: "プロジェクトマネジメント", cat: "Biz" },
+  { id: 8, short: "ヒアリング", name: "ヒアリング・要件整理・提案", cat: "Biz" },
+  { id: 9, short: "生産", name: "生産", cat: "Domain" },
+  { id: 10, short: "企画", name: "企画", cat: "Domain" },
+  { id: 11, short: "販売", name: "販売", cat: "Domain" },
+  { id: 12, short: "経営管理", name: "経営＆管理", cat: "Domain" },
+];
+
+const CATS = [
+  { key: "AI", label: "AIスキル", color: "#6366f1" },
+  { key: "Tech", label: "テクノロジー", color: "#0ea5e9" },
+  { key: "Biz", label: "ビジネス推進", color: "#f59e0b" },
+  { key: "Domain", label: "ドメイン知識", color: "#10b981" },
+];
+
+const LEVELS = ["", "未経験", "基礎知識", "実務可能", "主導可能", "エキスパート"];
+const cc = (cat) => CATS.find(c => c.key === cat)?.color || "#666";
+const cb = (v) => {
+  if (!v || v <= 0) return { bg: "#1a1a2e", text: "#555", bd: "#2a2a3e" };
+  if (v <= 1.4) return { bg: "#1e1e30", text: "#94a3b8", bd: "#2d2d45" };
+  if (v <= 2.4) return { bg: "#1e2a3a", text: "#7dd3fc", bd: "#2a4055" };
+  if (v <= 3.4) return { bg: "#1a3040", text: "#38bdf8", bd: "#2a5068" };
+  if (v <= 4.4) return { bg: "#0f3a2e", text: "#4ade80", bd: "#1a5540" };
+  return { bg: "#2d1a3e", text: "#c084fc", bd: "#4a2a65" };
+};
+const fmt = (v) => v == null ? "—" : Number.isInteger(v) ? v : v.toFixed(1);
+
+function peerAvg(short) {
+  const rows = PEER_RAW.filter(r => r.target === short);
+  return SKILLS.map((_, i) => {
+    const vals = rows.map(r => r.s[i]).filter(v => v != null);
+    return vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
+  });
+}
+
+function App() {
+  const [view, setView] = useState("heatmap");
+  const [skill, setSkill] = useState(null);
+  const [hov, setHov] = useState(null);
+  const [mode, setMode] = useState("combined");
+
+  const data = useMemo(() => MEMBERS.map(m => ({ ...m, peer: peerAvg(m.short) })), []);
+
+  const score = (m, i) => {
+    const s = m.self[i] || null, p = m.peer[i];
+    if (mode === "self") return s;
+    if (mode === "peer") return p;
+    return s && p ? +((s + p) / 2).toFixed(1) : s || p || null;
+  };
+
+  const Tab = ({ k, l }) => <button onClick={() => { setView(k); setSkill(null); }} style={{ padding: "6px 14px", borderRadius: 7, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit", background: view === k ? "#6366f1" : "transparent", color: view === k ? "#fff" : "#94a3b8" }}>{l}</button>;
+  const Mode = ({ k, l }) => <button onClick={() => setMode(k)} style={{ padding: "4px 10px", borderRadius: 5, border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600, fontFamily: "inherit", background: mode === k ? "#334155" : "transparent", color: mode === k ? "#e2e8f0" : "#64748b" }}>{l}</button>;
+
+  return (
+    <div style={{ fontFamily: "'Noto Sans JP',sans-serif", background: "#0f0f1a", color: "#e2e8f0", minHeight: "100vh", padding: 20 }}>
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700&display=swap" rel="stylesheet" />
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 3, color: "#6366f1", textTransform: "uppercase" }}>AI Initiative Team</div>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: "2px 0 16px", color: "#f8fafc" }}>スキルマトリクス — 自己評価 × 他者評価</h1>
+
+        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 2, background: "#1a1a2e", borderRadius: 8, padding: 3 }}>
+            <Tab k="heatmap" l="ヒートマップ" /><Tab k="assign" l="アサイン検索" /><Tab k="members" l="メンバー別" /><Tab k="gaps" l="ギャップ分析" />
+          </div>
+          <div style={{ display: "flex", gap: 2, background: "#1a1a2e", borderRadius: 8, padding: 3, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#64748b", padding: "0 6px" }}>表示：</span>
+            <Mode k="combined" l="総合" /><Mode k="self" l="自己" /><Mode k="peer" l="他者" />
+          </div>
+        </div>
+
+        {view === "heatmap" && (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ borderCollapse: "separate", borderSpacing: 2, width: "100%" }}>
+              <thead>
+                <tr><th style={{ width: 120 }} />{SKILLS.map(sk => (
+                  <th key={sk.id} onClick={() => setSkill(skill === sk.id ? null : sk.id)} style={{ padding: "4px 2px", fontSize: 9, color: skill === sk.id ? "#f8fafc" : "#94a3b8", cursor: "pointer", textAlign: "center", writingMode: "vertical-rl", height: 68, background: skill === sk.id ? "#6366f115" : "transparent", borderRadius: 3, borderBottom: `2px solid ${cc(sk.cat)}30` }}>{sk.short}</th>
+                ))}</tr>
+              </thead>
+              <tbody>{data.map((m, mi) => (
+                <tr key={mi}>
+                  <td style={{ padding: "3px 5px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>
+                    <span style={{ color: "#f8fafc" }}>{m.short}</span>
+                    <span style={{ fontSize: 9, color: "#64748b", marginLeft: 4 }}>{m.role}</span>
+                  </td>
+                  {SKILLS.map((_, si) => {
+                    const v = score(m, si), c = cb(v), h = hov?.m === mi && hov?.s === si;
+                    return (
+                      <td key={si} onMouseEnter={() => setHov({ m: mi, s: si })} onMouseLeave={() => setHov(null)}
+                        style={{ textAlign: "center", padding: "4px 1px", fontSize: 11, fontWeight: 700, background: c.bg, color: c.text, borderRadius: 3, border: `1px solid ${c.bd}`, position: "relative", transform: h ? "scale(1.15)" : "scale(1)", zIndex: h ? 10 : 1, transition: "all .1s", boxShadow: h ? `0 0 10px ${c.text}30` : "none" }}>
+                        {fmt(v)}
+                        {h && v && (
+                          <div style={{ position: "absolute", bottom: "calc(100% + 4px)", left: "50%", transform: "translateX(-50%)", background: "#1e293b", border: "1px solid #334155", borderRadius: 5, padding: "5px 9px", fontSize: 10, whiteSpace: "nowrap", color: "#e2e8f0", zIndex: 100, boxShadow: "0 4px 12px rgba(0,0,0,.6)" }}>
+                            <div style={{ fontWeight: 700, marginBottom: 2 }}>{SKILLS[si].short}</div>
+                            <div>自己: {m.self[si] || "—"} | 他者: {m.peer[si] != null ? m.peer[si].toFixed(1) : "—"}</div>
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}</tbody>
+            </table>
+            <div style={{ display: "flex", gap: 10, marginTop: 10, justifyContent: "center" }}>
+              {[1,2,3,4,5].map(v => <div key={v} style={{ display: "flex", alignItems: "center", gap: 3 }}><div style={{ width: 15, height: 15, borderRadius: 2, ...(() => { const c = cb(v); return { background: c.bg, border: `1px solid ${c.bd}`, color: c.text }; })(), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700 }}>{v}</div><span style={{ fontSize: 9, color: "#94a3b8" }}>{LEVELS[v]}</span></div>)}
+            </div>
+          </div>
+        )}
+
+        {view === "assign" && (() => {
+          const ranked = skill != null ? data.map(m => ({ ...m, sc: score(m, skill) })).filter(m => m.sc > 0).sort((a, b) => b.sc - a.sc) : [];
+          return (
+            <div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 16 }}>
+                {SKILLS.map(sk => <button key={sk.id} onClick={() => setSkill(skill === sk.id ? null : sk.id)} style={{ padding: "6px 11px", borderRadius: 14, border: `1px solid ${cc(sk.cat)}40`, background: skill === sk.id ? cc(sk.cat) + "20" : "#1a1a2e", color: skill === sk.id ? cc(sk.cat) : "#94a3b8", cursor: "pointer", fontSize: 11, fontFamily: "inherit" }}>{sk.short}</button>)}
+              </div>
+              {skill != null && (
+                <div style={{ background: "#1a1a2e", borderRadius: 10, padding: 16, border: "1px solid #2a2a3e" }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, margin: "0 0 12px", color: cc(SKILLS[skill].cat) }}>{SKILLS[skill].name}</h3>
+                  {ranked.map((m, i) => { const c = cb(m.sc); return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", marginBottom: 3, background: i === 0 ? "#0f2030" : "transparent", borderRadius: 6, border: i === 0 ? `1px solid ${cc(SKILLS[skill].cat)}30` : "none" }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 5, background: c.bg, border: `1px solid ${c.bd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: c.text }}>{fmt(m.sc)}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</div>
+                        <div style={{ fontSize: 10, color: "#64748b" }}>{m.role} — 自己: {m.self[skill] || "—"} / 他者: {m.peer[skill] != null ? m.peer[skill].toFixed(1) : "—"}</div>
+                      </div>
+                      {i === 0 && <span style={{ fontSize: 9, fontWeight: 600, color: cc(SKILLS[skill].cat), background: cc(SKILLS[skill].cat) + "15", padding: "2px 7px", borderRadius: 4 }}>最適</span>}
+                    </div>
+                  ); })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {view === "members" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))", gap: 10 }}>
+            {data.filter(m => m.self.some(s => s > 0) || m.peer.some(p => p != null)).map((m, i) => {
+              const scores = SKILLS.map((_, si) => score(m, si) || 0);
+              const filled = scores.filter(s => s > 0);
+              const avg = filled.length ? (filled.reduce((a, b) => a + b, 0) / filled.length).toFixed(1) : "—";
+              return (
+                <div key={i} style={{ background: "#1a1a2e", borderRadius: 10, padding: 14, border: "1px solid #2a2a3e" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div><div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div><div style={{ fontSize: 10, color: "#64748b" }}>{m.role}</div></div>
+                    <div style={{ textAlign: "right" }}><div style={{ fontSize: 17, fontWeight: 700, color: "#6366f1" }}>{avg}</div><div style={{ fontSize: 9, color: "#64748b" }}>平均</div></div>
+                  </div>
+                  {SKILLS.map((sk, si) => {
+                    const sv = m.self[si] || 0, pv = m.peer[si] || 0;
+                    return (
+                      <div key={si} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                        <div style={{ width: 60, fontSize: 9, color: "#94a3b8", textAlign: "right" }}>{sk.short}</div>
+                        <div style={{ flex: 1, height: 10, background: "#0f0f1a", borderRadius: 2, position: "relative", overflow: "hidden" }}>
+                          <div style={{ position: "absolute", top: 0, left: 0, width: `${(sv / 5) * 100}%`, height: "50%", background: cc(sk.cat) + "90" }} />
+                          <div style={{ position: "absolute", bottom: 0, left: 0, width: `${(pv / 5) * 100}%`, height: "50%", background: cc(sk.cat) + "40" }} />
+                        </div>
+                        <div style={{ width: 34, fontSize: 8, color: "#94a3b8", textAlign: "center" }}>{sv || "—"}/{pv ? pv.toFixed(1) : "—"}</div>
+                      </div>
+                    );
+                  })}
+                  <div style={{ fontSize: 8, color: "#475569", marginTop: 4 }}>上段=自己 / 下段=他者</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {view === "gaps" && (() => {
+          const gd = SKILLS.map((sk, i) => {
+            const sc = data.map(m => score(m, i)).filter(v => v && v > 0);
+            const avg = sc.length ? +(sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1) : 0;
+            const gap = sc.filter(s => s <= 2).length;
+            const top = data.filter(m => score(m, i) === Math.max(...sc, 0)).map(m => m.short);
+            return { ...sk, avg, gap, top };
+          });
+          return (
+            <div>
+              {gd.map((sk, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", marginBottom: 3, background: "#1a1a2e", borderRadius: 7, border: "1px solid #2a2a3e" }}>
+                  <div style={{ width: 3, height: 28, borderRadius: 2, background: cc(sk.cat) }} />
+                  <div style={{ width: 90, flexShrink: 0 }}><div style={{ fontSize: 11, fontWeight: 600 }}>{sk.short}</div></div>
+                  <div style={{ flex: 1, display: "flex", gap: 2 }}>
+                    {data.filter(m => score(m, i) > 0).sort((a, b) => score(b, i) - score(a, i)).map((m, j) => { const v = score(m, i), c = cb(v); return (
+                      <div key={j} title={`${m.short}: ${fmt(v)}`} style={{ width: 20, height: 20, borderRadius: 3, background: c.bg, border: `1px solid ${c.bd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: c.text }}>{fmt(v)}</div>
+                    ); })}
+                  </div>
+                  <div style={{ width: 80, textAlign: "right" }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: sk.gap > 4 ? "#f87171" : sk.gap > 2 ? "#fbbf24" : "#4ade80" }}>{sk.gap > 4 ? "要強化" : sk.gap > 2 ? "やや不足" : "充足"}</div>
+                    <div style={{ fontSize: 8, color: "#64748b" }}>平均 {sk.avg}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
