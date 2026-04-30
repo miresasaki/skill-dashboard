@@ -72,7 +72,7 @@ SKILLS.forEach(s => { SKILL_NAME_MAP[s.name] = s.id; SKILL_NAME_MAP[s.short] = s
 const CATS = [{ key: "AI", label: "AIスキル", color: "#6366f1" },{ key: "Tech", label: "テクノロジー", color: "#0ea5e9" },{ key: "Biz", label: "ビジネス推進", color: "#f59e0b" },{ key: "Domain", label: "ドメイン知識", color: "#10b981" }];
 const LEVELS = ["", "未経験", "基礎知識", "実務可能", "主導可能", "エキスパート"];
 const cc = (cat) => CATS.find(c => c.key === cat)?.color || "#666";
-const cb = (v) => { if (!v || v <= 0) return { bg: "#1a1a2e", text: "#555", bd: "#2a2a3e" }; if (v <= 1.4) return { bg: "#1e1e30", text: "#94a3b8", bd: "#2d2d45" }; if (v <= 2.4) return { bg: "#1e2a3a", text: "#7dd3fc", bd: "#2a4055" }; if (v <= 3.4) return { bg: "#1a3040", text: "#38bdf8", bd: "#2a5068" }; if (v <= 4.4) return { bg: "#0f3a2e", text: "#4ade80", bd: "#1a5540" }; return { bg: "#2d1a3e", text: "#c084fc", bd: "#4a2a65" }; };
+const cb = (v) => { if (!v || v <= 0) return { bg: "#1a1a2e", text: "#555", bd: "#2a2a3e" }; if (v <= 1.4) return { bg: "#1e1e30", text: "#e2e8f0", bd: "#3a3a4e" }; if (v <= 2.4) return { bg: "#0f2a1a", text: "#4ade80", bd: "#1a4030" }; if (v <= 3.4) return { bg: "#0f1a3a", text: "#60a5fa", bd: "#1a2a55" }; if (v <= 4.4) return { bg: "#2a1a3e", text: "#c084fc", bd: "#3a2a55" }; return { bg: "#2a1a08", text: "#fbbf24", bd: "#4a3010" }; };
 const fmt = (v) => v == null ? "—" : Number.isInteger(v) ? v : v.toFixed(1);
 function peerAvg(short) { const rows = PEER_RAW.filter(r => r.target === short); return SKILLS.map((_, i) => { const vals = rows.map(r => r.s[i]).filter(v => v != null); return vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null; }); }
 
