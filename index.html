@@ -92,7 +92,7 @@ function parseCSV(text) {
     const memberShort = MEMBER_ALIASES[memberRaw] || memberRaw;
     const skillName = cols[2] || "";
     const skillId = SKILL_NAME_MAP[skillName];
-    const target = parseInt(cols[4]) || 0;
+    const target = parseInt(cols[4]?.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))) || 0;
     const plan = cols[5] || "";
     const current = parseFloat(cols[3]) || 0;
     if (memberShort && skillId !== undefined) {
@@ -118,17 +118,19 @@ async function fetchGoals() {
   } catch { return {}; }
 }
 
+// Direct mapping: member short name → form dropdown value
+const FORM_MEMBER_NAMES = { "Chie": "Chie", "Asako": "Asako", "Fukuda": "Fukuda", "Muto": "Muto", "Nakai": "Taku Nakai", "DOI": "DOI", "Mire": "Mire", "Anara": "Anar" };
+// Full-width numbers for form dropdown
+const FULLWIDTH = ["０","１","２","３","４","５"];
+
 async function submitToForm(member, skill, current, target, plan) {
   const skillName = `${skill.id + 1}. ${skill.name}`;
-  const memberObj = MEMBERS.find(m => m.short === member);
-  const formMember = memberObj?.name || member;
-  // Find matching form name from aliases
-  const formName = Object.entries(MEMBER_ALIASES).find(([k, v]) => v === member && k.length <= 10)?.[0] || formMember;
+  const formMember = FORM_MEMBER_NAMES[member] || member;
   const body = new URLSearchParams();
-  body.append(ENTRY.member, formName);
+  body.append(ENTRY.member, formMember);
   body.append(ENTRY.skill, skillName);
   body.append(ENTRY.current, String(current || 0));
-  body.append(ENTRY.target, String(target));
+  body.append(ENTRY.target, target > 0 ? FULLWIDTH[target] : "０");
   body.append(ENTRY.plan, plan || "");
   await fetch(FORM_URL, { method: "POST", body, mode: "no-cors" });
 }
