@@ -136,8 +136,8 @@ async function submitToForm(member, skill, current, target, plan) {
 }
 
 // ===== Goal Panel =====
-function GoalPanel({ member, onClose, goals, setGoals, score, onSave }) {
-  const [selSkill, setSelSkill] = useState(null);
+function GoalPanel({ member, onClose, goals, setGoals, score, initialSkill }) {
+  const [selSkill, setSelSkill] = useState(initialSkill ?? null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [localGoals, setLocalGoals] = useState(() => JSON.parse(JSON.stringify(goals[member.short] || {})));
@@ -337,13 +337,14 @@ function App() {
               ))}</tr></thead>
               <tbody>{data.map((m, mi) => (
                 <tr key={mi}>
-                  <td style={{ padding: "3px 5px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", cursor: "pointer" }} onClick={() => setGoalPanel(m)}>
+                  <td style={{ padding: "3px 5px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", cursor: "pointer" }} onClick={() => setGoalPanel({ member: m })}>
                     <span style={{ color: "#f8fafc", borderBottom: "1px dashed #334155" }}>{m.short}</span><GoalDot member={m} />
                     <span style={{ fontSize: 9, color: "#64748b", marginLeft: 4 }}>{m.role}</span>
                   </td>
                   {SKILLS.map((_, si) => { const v = score(m, si), c = cb(v), h = hov?.m === mi && hov?.s === si; const g = goals[m.short]?.[si]?.target; return (
                     <td key={si} onMouseEnter={() => setHov({ m: mi, s: si })} onMouseLeave={() => setHov(null)}
-                      style={{ textAlign: "center", padding: "4px 1px", fontSize: 11, fontWeight: 700, background: c.bg, color: c.text, borderRadius: 3, border: g ? `1px solid #f59e0b50` : `1px solid ${c.bd}`, position: "relative", transform: h ? "scale(1.15)" : "scale(1)", zIndex: h ? 10 : 1, transition: "all .1s", boxShadow: h ? `0 0 10px ${c.text}30` : "none" }}>
+                      onClick={() => setGoalPanel({ member: m, initialSkill: si })}
+                      style={{ textAlign: "center", padding: "4px 1px", fontSize: 11, fontWeight: 700, background: c.bg, color: c.text, borderRadius: 3, border: g ? `1px solid #f59e0b50` : `1px solid ${c.bd}`, position: "relative", transform: h ? "scale(1.15)" : "scale(1)", zIndex: h ? 10 : 1, transition: "all .1s", boxShadow: h ? `0 0 10px ${c.text}30` : "none", cursor: "pointer" }}>
                       {fmt(v)}{g && <div style={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: 3, background: "#f59e0b" }} />}
                       {h && v && (<div style={{ position: "absolute", bottom: "calc(100% + 4px)", left: "50%", transform: "translateX(-50%)", background: "#1e293b", border: "1px solid #334155", borderRadius: 5, padding: "5px 9px", fontSize: 10, whiteSpace: "nowrap", color: "#e2e8f0", zIndex: 100, boxShadow: "0 4px 12px rgba(0,0,0,.6)" }}>
                         <div style={{ fontWeight: 700, marginBottom: 2 }}>{SKILLS[si].short}</div>
@@ -368,7 +369,7 @@ function App() {
               {ranked.map((m, i) => { const c = cb(m.sc); return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", marginBottom: 3, background: i === 0 ? "#0f2030" : "transparent", borderRadius: 6, border: i === 0 ? `1px solid ${cc(SKILLS[skill].cat)}30` : "none" }}>
                   <div style={{ width: 28, height: 28, borderRadius: 5, background: c.bg, border: `1px solid ${c.bd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: c.text }}>{fmt(m.sc)}</div>
-                  <div style={{ flex: 1, cursor: "pointer" }} onClick={() => setGoalPanel(m)}><div style={{ fontSize: 13, fontWeight: 600, borderBottom: "1px dashed #334155", display: "inline" }}>{m.name}</div><div style={{ fontSize: 10, color: "#64748b" }}>{m.role}</div></div>
+                  <div style={{ flex: 1, cursor: "pointer" }} onClick={() => setGoalPanel({ member: m })}><div style={{ fontSize: 13, fontWeight: 600, borderBottom: "1px dashed #334155", display: "inline" }}>{m.name}</div><div style={{ fontSize: 10, color: "#64748b" }}>{m.role}</div></div>
                   {i === 0 && <span style={{ fontSize: 9, fontWeight: 600, color: cc(SKILLS[skill].cat), background: cc(SKILLS[skill].cat) + "15", padding: "2px 7px", borderRadius: 4 }}>最適</span>}
                 </div>); })}
             </div>)}
@@ -381,7 +382,7 @@ function App() {
               const avg = filled.length ? (filled.reduce((a, b) => a + b, 0) / filled.length).toFixed(1) : "—";
               const mg = goals[m.short] || {};
               return (<div key={i} style={{ background: "#1a1a2e", borderRadius: 10, padding: 14, border: "1px solid #2a2a3e" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, cursor: "pointer" }} onClick={() => setGoalPanel(m)}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, cursor: "pointer" }} onClick={() => setGoalPanel({ member: m })}>
                   <div><div style={{ fontSize: 13, fontWeight: 700, borderBottom: "1px dashed #334155", display: "inline" }}>{m.name}</div><GoalDot member={m} /><div style={{ fontSize: 10, color: "#64748b" }}>{m.role}</div></div>
                   <div style={{ textAlign: "right" }}><div style={{ fontSize: 17, fontWeight: 700, color: "#6366f1" }}>{avg}</div><div style={{ fontSize: 9, color: "#64748b" }}>平均</div></div>
                 </div>
@@ -406,14 +407,14 @@ function App() {
               <div style={{ width: 3, height: 28, borderRadius: 2, background: cc(sk.cat) }} />
               <div style={{ width: 90, flexShrink: 0 }}><div style={{ fontSize: 11, fontWeight: 600 }}>{sk.short}</div></div>
               <div style={{ flex: 1, display: "flex", gap: 2 }}>{data.filter(m => score(m, i) > 0).sort((a, b) => score(b, i) - score(a, i)).map((m, j) => { const v = score(m, i), c = cb(v); return (
-                <div key={j} title={`${m.short}: ${fmt(v)}`} onClick={() => setGoalPanel(m)} style={{ width: 20, height: 20, borderRadius: 3, background: c.bg, border: `1px solid ${c.bd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: c.text, cursor: "pointer" }}>{fmt(v)}</div>); })}</div>
+                <div key={j} title={`${m.short}: ${fmt(v)}`} onClick={() => setGoalPanel({ member: m })} style={{ width: 20, height: 20, borderRadius: 3, background: c.bg, border: `1px solid ${c.bd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: c.text, cursor: "pointer" }}>{fmt(v)}</div>); })}</div>
               <div style={{ width: 80, textAlign: "right" }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: sk.gap > 4 ? "#f87171" : sk.gap > 2 ? "#fbbf24" : "#4ade80" }}>{sk.gap > 4 ? "要強化" : sk.gap > 2 ? "やや不足" : "充足"}</div>
                 <div style={{ fontSize: 8, color: "#64748b" }}>平均 {sk.avg}</div>
               </div>
             </div>))}</div>); })()}
       </div>
-      {goalPanel && <GoalPanel member={goalPanel} onClose={() => setGoalPanel(null)} goals={goals} setGoals={setGoals} score={score} />}
+      {goalPanel && <GoalPanel member={goalPanel.member} initialSkill={goalPanel.initialSkill} onClose={() => setGoalPanel(null)} goals={goals} setGoals={setGoals} score={score} />}
     </div>
   );
 }
